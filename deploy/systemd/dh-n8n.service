@@ -1,0 +1,15 @@
+[Unit]
+Description=n8n orchestrator for Doppelherz Content Robot
+After=network.target dh-robot.service
+
+[Service]
+User=dhrobot
+Group=dhrobot
+EnvironmentFile=/opt/dh-robot/n8n.env
+Environment=PATH=/opt/dh-robot/node24/bin:/usr/bin:/bin
+ExecStart=/opt/dh-robot/n8n-pkg/node_modules/.bin/n8n start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

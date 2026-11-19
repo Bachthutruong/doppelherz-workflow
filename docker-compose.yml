@@ -1,0 +1,47 @@
+# Robot (FastAPI) + n8n điều phối. Chạy: docker compose up -d --build
+# Dashboard: http://localhost:8000 · n8n: http://localhost:5678
+services:
+  robot:
+    build: .
+    environment:
+      PUBLISH_MODE: ${PUBLISH_MODE:-dry_run}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-change-me}
+      FB_PAGE_ID: ${FB_PAGE_ID:-}
+      FB_PAGE_TOKEN: ${FB_PAGE_TOKEN:-}
+      PINTEREST_TOKEN: ${PINTEREST_TOKEN:-}
+    volumes:
+      - robot-data:/app/data
+    ports:
+      - "${ROBOT_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.48.6
+    depends_on:
+      - robot
+    environment:
+      GENERIC_TIMEZONE: Asia/Ho_Chi_Minh
+      TZ: Asia/Ho_Chi_Minh
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      N8N_SECURE_COOKIE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      ROBOT_URL: http://robot:8000
+      ROBOT_PUBLIC_URL: http://localhost:${ROBOT_PORT:-8000}
+      ROBOT_WEBHOOK_SECRET: ${WEBHOOK_SECRET:-change-me}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./workflows/n8n:/workflows:ro
+    # Nạp và kích hoạt luồng mỗi lần khởi động, rồi chạy n8n
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["n8n import:workflow --input=/workflows/doppelherz_content_sync.json && n8n publish:workflow --id=DhContentSync01; exec n8n start"]
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    restart: unless-stopped
+
+volumes:
+  robot-data:
+  n8n-data:
