@@ -2,7 +2,9 @@
 
 > An AI content robot that turns every new article on **doppelherz.vn** into a Facebook post and a Pinterest pin — written by **Claude**, checked against Vietnamese health-supplement advertising rules, approved by a human, scheduled into peak hours and reported weekly.
 
-[![CI](https://github.com/Bachthutruong/doppelherz-workflow/actions/workflows/ci.yml/badge.svg)](https://github.com/Bachthutruong/doppelherz-workflow/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-20%20passed-brightgreen)
+![Lint](https://img.shields.io/badge/lint-ruff-261230)
+![Docker](https://img.shields.io/badge/docker-compose-2496ED)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Live demo](https://img.shields.io/badge/live%20demo-doppelherz--workflow.jiudi.cloud-D50F25)](https://doppelherz-workflow.jiudi.cloud)
@@ -128,7 +130,7 @@ doppelherz-workflow/
 
 ## Testing
 
-`make test` runs 20 tests covering HTML parsing, XNQC parsing, every compliance rule (including the "chưa khỏi" vs "chữa khỏi" diacritic trap), the Claude request shape (mocked transport), scheduler limits, both publishers' payloads and HTTP calls, the end-to-end dry-run pipeline and every dashboard page. CI runs lint, tests on Python 3.11 and 3.12, and a Docker build.
+`make test` runs 20 tests covering HTML parsing, XNQC parsing, every compliance rule (including the "chưa khỏi" vs "chữa khỏi" diacritic trap), the Claude request shape (mocked transport), scheduler limits, both publishers' payloads and HTTP calls, the end-to-end dry-run pipeline and every dashboard page. The GitHub Actions workflow ([`ci.yml`](.github/workflows/ci.yml)) runs lint, tests on Python 3.11 and 3.12 and a Docker build on pull requests or on demand.
 
 ## Deployment
 
