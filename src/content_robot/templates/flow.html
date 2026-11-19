@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block crumb %}Hệ thống · số liệu cập nhật mỗi lần mở trang{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="hd"><h2>Sơ đồ luồng xử lý — 12 bước, số liệu thật</h2>
+    <div class="r legend"><span><i style="background:#FFF0E8;border:1px solid #E2592B"></i>n8n</span><span><i style="background:var(--line-2);border:1px solid #CFC6BE"></i>Robot</span><span><i style="background:#F3ECFF;border:1px solid #6B3FD1"></i>Claude</span><span><i style="background:var(--gold-50);border:1px solid var(--gold)"></i>Con người</span><span><i style="background:var(--fb-50);border:1px solid var(--fb)"></i>Kênh đăng</span></div></div>
+  <div class="bd">
+    <div class="flow">
+      <div class="row">
+        <div class="fs who-robot"><span class="no">1</span><div class="ic">{{ icon('globe') }}</div><div class="ti">WordPress đăng bài</div><div class="sb">Plugin gửi webhook khi bài chuyển sang "publish"</div><div class="ct">{{ arts|length }} bài đã nhận</div></div>
+        <div class="fs who-n8n"><span class="no">2</span><div class="ic">{{ icon('zap') }}</div><div class="ti">n8n kích hoạt</div><div class="sb">Webhook tức thì; dự phòng quét 15 phút</div><div class="ct">{{ n8n_total }} lượt gọi robot</div></div>
+        <div class="fs who-robot"><span class="no">3</span><div class="ic">{{ icon('file') }}</div><div class="ti">Robot đọc bài</div><div class="sb">REST API: nội dung, đề mục, ảnh, chuyên mục</div><div class="ct">{{ arts|length }} bài đã đọc</div></div>
+        <div class="fs who-robot"><span class="no">4</span><div class="ic">{{ icon('shield') }}</div><div class="ti">Tra sổ XNQC</div><div class="sb">Công dụng được phép của {{ nprod }} sản phẩm</div><div class="ct">{{ nx }}/{{ nprod }} số XNQC · {{ with_prod }} bài nhắc SP</div></div>
+        <div class="fs who-ai"><span class="no">5</span><div class="ic">{{ icon('spark') }}</div><div class="ti">Claude viết 2 bản</div><div class="sb">Đầu ra JSON theo schema, có fallback</div><div class="ct">{% if costs.cost %}{{ costs.runs }} lượt · ~${{ costs.cost }}{% else %}{{ costs.runs }} lượt · bộ sinh dự phòng{% endif %}</div></div>
+        <div class="fs who-ai"><span class="no">6</span><div class="ic">{{ icon('alert') }}</div><div class="ti">Kiểm duyệt 2 lớp</div><div class="sb">Bộ luật R1–R6 rồi AI pháp chế</div><div class="ct">{{ st.values()|sum }} bản · {{ st['blocked'] }} bị chặn</div></div>
+      </div>
+      <div class="row rev" style="position:relative">
+        <div class="turn"></div>
+        <div class="fs who-robot"><span class="no">7</span><div class="ic">{{ icon('inbox') }}</div><div class="ti">Hàng chờ duyệt</div><div class="sb">Render ảnh 2:3 + thẻ 1200×630, gắn UTM, báo Telegram</div><div class="ct">{{ st['needs_review'] }} đang chờ</div></div>
+        <div class="fs who-human"><span class="no">8</span><div class="ic">{{ icon('user') }}</div><div class="ti">Biên tập duyệt</div><div class="sb">Duyệt, sửa (kiểm duyệt lại) hoặc từ chối kèm góp ý</div><div class="ct">{{ approved }} bản đã duyệt</div></div>
+        <div class="fs who-robot"><span class="no">9</span><div class="ic">{{ icon('calendar') }}</div><div class="ti">Xếp lịch giờ vàng</div><div class="sb">FB 11:30 · 20:30, Pin 13:00 · 21:00</div><div class="ct">{{ st['scheduled'] }} đang chờ giờ</div></div>
+        <div class="fs who-ch"><span class="no">10</span><div class="ic">{{ icon('send') }}</div><div class="ti">Đăng qua API</div><div class="sb">Graph API v27.0 /feed · Pinterest v5 /pins</div><div class="ct">{{ st['published'] }} bản đã đăng</div></div>
+        <div class="fs who-robot"><span class="no">11</span><div class="ic">{{ icon('chart') }}</div><div class="ti">Thu số liệu</div><div class="sb">Hiển thị, tương tác, lượt nhấp theo UTM</div><div class="ct">{{ metrics_n }} bản có số liệu</div></div>
+        <div class="fs who-n8n"><span class="no">12</span><div class="ic">{{ icon('send') }}</div><div class="ti">Báo cáo tuần</div><div class="sb">n8n gọi lúc 8:00 thứ Hai, gửi Telegram</div><div class="ct"><a href="/bao-cao" style="color:var(--brand-600)">Xem báo cáo →</a></div></div>
+      </div>
+    </div>
+    <div class="branch">
+      <span class="chip err">{{ icon('x', 13) }} Bước 6 có lỗi chặn → biên tập sửa câu chữ → robot kiểm duyệt lại</span>
+      <span class="chip warn">{{ icon('edit', 13) }} Bước 8 từ chối → Claude viết lại theo góp ý (prompt P3)</span>
+      <span class="chip info">{{ icon('refresh', 13) }} Bước 10 lỗi API → thử lại sau 15 và 30 phút</span>
+    </div>
+  </div>
+</section>
+
+<div class="grid g-main mt">
+  <section class="card">
+    <div class="hd"><h2>Vết chạy thật của các bài gần nhất</h2><span class="sub">Ghi tự động ở từng bước</span></div>
+    <div class="bd">
+      {% for a in traces %}
+      <details {{ 'open' if loop.first }} style="border-top:1px solid var(--line-2);padding:10px 0">
+        <summary style="cursor:pointer;display:flex;gap:12px;align-items:center;list-style:none">
+          <img class="thumb sq" src="{{ thumb(a) }}" alt=""><div style="min-width:0"><b>{{ a.title }}</b><div class="small muted">{{ a.trace|length }} bước · bắt đầu {{ fmt(a.trace[0].ts, '%H:%M:%S %d/%m') }}</div></div>
+          <a class="btn sm" style="margin-left:auto" href="/bai/{{ a.id }}">Mở</a></summary>
+        <div class="tl" style="margin-top:10px">
+          {% for t in a.trace %}<div class="it {{ t.status }}"><div class="h"><b>{{ t.label }}</b>{% if t.ms is not none %}<span class="ms">{{ '{:,}'.format(t.ms).replace(',', '.') }} ms</span>{% endif %}<span class="ms">· {{ fmt(t.ts, '%H:%M:%S') }}</span></div><div class="d">{{ t.detail }}</div></div>{% endfor %}
+        </div>
+      </details>
+      {% else %}<div class="empty">Chưa có lượt chạy nào.</div>{% endfor %}
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="hd"><h2>n8n điều phối</h2><span class="r chip {{ 'ok' if n8n_total else 'warn' }}">{{ 'Đang chạy' if n8n_total else 'Chưa kết nối' }}</span></div>
+      <div class="bd">
+        <div class="list">
+          <div class="li"><div class="ic" style="color:#E2592B">{{ icon('globe') }}</div><div><div class="t">Webhook "bài mới"</div><div class="s">WordPress → n8n → robot /webhook/wordpress</div></div></div>
+          <div class="li"><div class="ic" style="color:#E2592B">{{ icon('clock') }}</div><div><div class="t">Mỗi 15 phút</div><div class="s">Quét bài mới (dự phòng) → đăng các bản đến giờ</div></div></div>
+          <div class="li"><div class="ic" style="color:#E2592B">{{ icon('calendar') }}</div><div><div class="t">8:00 thứ Hai</div><div class="s">Cập nhật số liệu → báo cáo tuần → Telegram</div></div></div>
+        </div>
+        <div class="tag" style="margin:12px 0 4px">Lần n8n gọi robot gần nhất</div>
+        <div class="tl">
+          {% for e in n8n %}<div class="it"><div class="h"><b class="small">{{ e.message }}</b></div><div class="d">{{ fmt(e.ts, '%H:%M:%S %d/%m') }} · {{ rel(e.ts) }}</div></div>
+          {% else %}<div class="small muted">Chưa có lượt gọi nào từ n8n.</div>{% endfor %}
+        </div>
+        <a class="btn sm" href="/tai-xuong/doppelherz_content_sync.json" style="margin-top:8px">{{ icon('download', 14) }} Tải luồng n8n (.json)</a>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card mt">
+  <div class="hd"><h2>Kiến trúc hệ thống</h2><span class="sub">Ai làm phần nào</span></div>
+  <div class="bd">
+    <div class="arch">
+      <div class="box"><b>doppelherz.vn</b><span>WordPress + WooCommerce · REST API, webhook</span></div>
+      <div class="ar"></div>
+      <div class="box" style="border-color:#E2592B"><b>n8n</b><span>Điểm kích hoạt, lịch chạy, thông báo — Marketing tự sửa được</span></div>
+      <div class="ar"></div>
+      <div class="box" style="border-color:var(--brand)"><b>Robot (Python · FastAPI)</b><span>Sổ XNQC · bộ luật tuân thủ · render ảnh · lịch · đăng · số liệu · dashboard</span>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap"><span class="chip" style="background:#F3ECFF;color:#6B3FD1">{{ icon('spark', 12) }} Claude API</span><span class="chip">{{ icon('db', 12) }} SQLite</span></div></div>
+      <div class="ar"></div>
+      <div class="stack"><div class="box"><b style="color:var(--fb)">Meta Graph API</b><span>Fanpage · lịch đăng · số liệu</span></div><div class="box"><b style="color:var(--pin)">Pinterest API v5</b><span>Ghim · bảng · analytics</span></div></div>
+    </div>
+    <div class="grid g-2 mt">
+      <figure style="margin:0"><img class="shot" src="/static/n8n.png" alt="Luồng n8n: lần chạy thành công theo nhánh Webhook → Robot → Có bản chờ duyệt → Telegram" loading="lazy"><figcaption class="small muted" style="margin-top:6px">Luồng n8n 2.48 — lần chạy thật theo nhánh Webhook → Robot → Có bản chờ duyệt → Telegram.</figcaption></figure>
+      <div class="about">
+        <h3>Vì sao chia n8n và robot?</h3>
+        <p class="small">n8n giữ phần "khi nào chạy, báo cho ai" — đội Marketing kéo thả sửa được, không cần lập trình viên. Robot giữ phần cần chính xác tuyệt đối: đối chiếu sổ XNQC, bộ luật tuân thủ, render ảnh, gọi API đăng bài, có kiểm thử tự động.</p>
+        <h3>An toàn khi AI viết nội dung y tế</h3>
+        <p class="small">Claude chỉ được dùng công dụng có trong sổ XNQC. Mỗi bản qua bộ luật cố định, rồi AI pháp chế, rồi người duyệt. Câu vi phạm khóa nút Duyệt cho tới khi được sửa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

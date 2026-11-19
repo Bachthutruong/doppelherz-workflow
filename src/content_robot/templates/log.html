@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block crumb %}Hệ thống · nhật ký kiểm toán mọi thao tác của robot, n8n và người duyệt{% endblock %}
+{% block content %}
+<section class="card"><div class="bd">
+  <div class="tabs"><a href="/nhat-ky" class="{{ 'on' if not entity }}">Tất cả</a>
+    {% for e in ents %}<a href="/nhat-ky?entity={{ e }}" class="{{ 'on' if entity == e }}">{{ {'article': 'Bài viết', 'variant': 'Bản đăng', 'n8n': 'n8n', 'claims': 'Sổ XNQC'}.get(e, e) }}</a>{% endfor %}</div>
+  <table class="tbl">
+    <thead><tr><th style="width:150px">Thời điểm</th><th style="width:90px">Mức</th><th style="width:120px">Đối tượng</th><th>Nội dung</th></tr></thead>
+    <tbody>{% for x in ev %}<tr><td class="small">{{ fmt(x.ts, '%H:%M:%S %d/%m') }}</td>
+      <td><span class="chip {{ 'err' if x.level == 'error' else ('warn' if x.level == 'warn' else 'ok') }}">{{ x.level }}</span></td>
+      <td class="small">{{ x.entity or '' }} {{ x.entity_id or '' }}</td><td>{{ x.message }}</td></tr>{% endfor %}</tbody>
+  </table>
+</div></section>
+{% endblock %}

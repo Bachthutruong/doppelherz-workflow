@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{{ title }} · Content Robot · Doppelherz (bản demo)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23D50F25'/><path d='M17 12.5c1-1 2-2.2 2-3.7A3.6 3.6 0 0 0 15.4 5c-1.2 0-2 .4-3 1.4-1-1-1.8-1.4-3-1.4A3.6 3.6 0 0 0 6 8.8c0 1.5 1 2.7 2 3.7l4.5 4.5z' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css?v={{ v }}">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="/">
+      <div class="mark">{{ icon('logo', 22) }}</div>
+      <div><b>Content Robot</b><span>Doppelherz · bản demo</span></div>
+    </a>
+    <nav class="nav">
+      <div class="sec">Vận hành</div>
+      <a href="/" class="{{ 'on' if path == '/' }}">{{ icon('overview') }} Tổng quan</a>
+      <a href="/noi-dung" class="{{ 'on' if path.startswith('/noi-dung') or path.startswith('/bai/') }}">{{ icon('file') }} Nội dung{% if n_review %}<span class="cnt">{{ n_review }}</span>{% endif %}</a>
+      <a href="/lich" class="{{ 'on' if path == '/lich' }}">{{ icon('calendar') }} Lịch đăng</a>
+      <a href="/bao-cao" class="{{ 'on' if path == '/bao-cao' }}">{{ icon('chart') }} Báo cáo</a>
+      <div class="sec">Hệ thống</div>
+      <a href="/luong" class="{{ 'on' if path == '/luong' }}">{{ icon('flow') }} Luồng xử lý</a>
+      <a href="/so-xnqc" class="{{ 'on' if path == '/so-xnqc' }}">{{ icon('shield') }} Sổ XNQC</a>
+      <a href="/nhat-ky" class="{{ 'on' if path == '/nhat-ky' }}">{{ icon('list') }} Nhật ký</a>
+      <a href="/gioi-thieu" class="{{ 'on' if path == '/gioi-thieu' }}">{{ icon('info') }} Về bản demo</a>
+    </nav>
+    <div class="side-foot">
+      <div class="row"><span class="dot ok"></span> Robot đang chạy</div>
+      <div class="row">{{ icon('spark', 14) }} {{ ai_label }}</div>
+      <div class="row">{{ icon('send', 14) }} {{ 'Đăng thật' if live else 'Chạy thử — không đăng thật' }}</div>
+      <div class="row">{{ icon('zap', 14) }} n8n: {{ rel(n8n_last) if n8n_last else 'chưa gọi' }}</div>
+      <small>Bản demo bài test ứng viên. Nội dung bài viết lấy công khai từ doppelherz.vn.</small>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div><div class="crumb">{% block crumb %}Doppelherz Việt Nam · Website → Facebook, Pinterest{% endblock %}</div><h1>{% block heading %}{{ title }}{% endblock %}</h1></div>
+      <div class="top-actions">{% block actions %}
+        <form method="post" action="/ui/sync"><button class="btn pri">{{ icon('refresh', 16) }} Lấy bài mới</button></form>
+      {% endblock %}</div>
+    </header>
+    {% block content %}{% endblock %}
+    <footer class="foot">
+      <span>Bản demo bài test vị trí Quản lý dự án AI Claude · Vu Duy Bach · <a href="{{ s.repo_url }}" target="_blank" rel="noopener" style="color:var(--brand-600);font-weight:600">GitHub</a></span>
+      <span>Không phải hệ thống chính thức của Doppelherz Việt Nam · Chế độ chạy thử: không đăng lên kênh thật</span>
+    </footer>
+  </main>
+</div>
+{% if toast %}<div class="toast" id="toast">{{ toast }}</div>{% endif %}
+<script src="/static/app.js?v={{ v }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

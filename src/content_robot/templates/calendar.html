@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block actions %}
+  <form method="post" action="/ui/run-due"><button class="btn">{{ icon('play', 16) }} Đăng các bản đến giờ</button></form>
+  <form method="post" action="/ui/sync"><button class="btn pri">{{ icon('refresh', 16) }} Lấy bài mới</button></form>
+{% endblock %}
+{% block content %}
+<div class="cal-wrap">
+  <section class="card">
+    <div class="cal-bar">
+      <button class="btn sm" id="cToday">Hôm nay</button>
+      <button class="ib" id="cPrev" aria-label="Trước">{{ icon('left', 16) }}</button>
+      <button class="ib" id="cNext" aria-label="Sau">{{ icon('right', 16) }}</button>
+      <h2 id="cTitle"></h2>
+      <div class="seg"><button data-v="week" class="on">Tuần</button><button data-v="month">Tháng</button></div>
+      <div class="flt">
+        <label data-ch="facebook"><input type="checkbox" checked><span class="badge-ch fb" style="width:18px;height:18px;font-size:10px">f</span> Facebook</label>
+        <label data-ch="pinterest"><input type="checkbox" checked><span class="badge-ch pin" style="width:18px;height:18px;font-size:10px">P</span> Pinterest</label>
+      </div>
+    </div>
+    <div id="cBody"></div>
+  </section>
+
+  <aside class="grid">
+    <section class="card">
+      <div class="hd"><h2>Sắp đăng</h2></div>
+      <div class="bd"><div class="list">
+        {% for e in upcoming %}
+        <a class="li" href="/bai/{{ e.aid }}"><img class="thumb sq" src="{{ e.img or '/static/placeholder.svg' }}" alt="">
+          <div style="min-width:0"><div class="t small" style="font-size:13px">{{ e.title }}</div><div class="s">{{ e.t }} · {{ e.d[8:10] }}/{{ e.d[5:7] }}</div></div>
+          <div class="r"><span class="badge-ch {{ 'fb' if e.ch == 'facebook' else 'pin' }}">{{ 'f' if e.ch == 'facebook' else 'P' }}</span></div></a>
+        {% else %}<div class="empty small">Chưa có bản nào chờ giờ đăng.</div>{% endfor %}
+      </div></div>
+    </section>
+    <section class="card">
+      <div class="hd"><h2>Khung giờ vàng</h2><span class="r chip gold">giờ Việt Nam</span></div>
+      <div class="bd">
+        {% for ch, times in s.slots.items() %}
+        <div class="li"><span class="badge-ch {{ 'fb' if ch == 'facebook' else 'pin' }}">{{ 'f' if ch == 'facebook' else 'P' }}</span>
+          <div><div class="t">{{ 'Facebook' if ch == 'facebook' else 'Pinterest' }}</div><div class="s">Tối đa {{ s.max_per_day[ch] }} bài/ngày</div></div>
+          <div class="r">{% for t in times %}<span class="chip">{{ t }}</span>{% endfor %}</div></div>
+        {% endfor %}
+        <p class="small muted" style="margin:10px 0 0">Robot xếp mỗi bản đã duyệt vào khung trống sớm nhất, cách hiện tại ít nhất 15 phút (Graph API chỉ nhận hẹn giờ 10 phút – 30 ngày).</p>
+      </div>
+    </section>
+    <section class="card">
+      <div class="hd"><h2>Tuần này</h2></div>
+      <div class="bd" style="display:flex;gap:10px">
+        <div class="kpi card" style="flex:1;box-shadow:none"><div><div class="n">{{ week_n['facebook'] }}</div><div class="l">bài Facebook</div></div></div>
+        <div class="kpi card" style="flex:1;box-shadow:none"><div><div class="n">{{ week_n['pinterest'] }}</div><div class="l">ghim Pinterest</div></div></div>
+      </div>
+    </section>
+  </aside>
+</div>
+<div class="pop" id="cPop"></div>
+{% endblock %}
+{% block scripts %}<script>window.CAL = {{ cal }}; initCalendar();</script>{% endblock %}

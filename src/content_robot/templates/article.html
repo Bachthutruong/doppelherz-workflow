@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block crumb %}<a href="/noi-dung">Nội dung</a> / Bài #{{ a.wp_id }}{% endblock %}
+{% block heading %}{{ a.title }}{% endblock %}
+{% block actions %}<a class="btn" href="{{ a.url }}" target="_blank" rel="noopener">{{ icon('external', 16) }} Mở trên doppelherz.vn</a>{% endblock %}
+
+{% macro issues(v) %}
+  {% set items = v.compliance_issues or [] %}
+  {% if not items %}<div class="issue"><span class="chip ok">{{ icon('check', 13) }} Đạt</span><div class="small muted">Không phát hiện vấn đề theo bộ luật R1–R6.</div></div>{% endif %}
+  {% for i in items %}
+  <div class="issue">
+    <span class="chip {{ SEV_CLS[i.severity] }}">{{ SEV_VI[i.severity] }}</span>
+    <div style="min-width:0"><b class="small">{{ i.code }} · {{ RULE_VI.get(i.code.replace('AI-', ''), i.code) }}</b>
+      <div class="small">{{ i.message }}</div>{% if i.excerpt %}<div class="q">“{{ i.excerpt }}”</div>{% endif %}</div>
+  </div>
+  {% endfor %}
+{% endmacro %}
+
+{% macro actions(v) %}
+  {% if v.status == 'published' %}
+    <div class="chip ok" style="margin-top:12px">{{ icon('check', 13) }} Đã đăng {{ fmt(v.published_at) }} · {{ v.remote_id }}</div>
+  {% else %}
+  <div class="acts">
+    {% if v.status in ('needs_review', 'rejected', 'approved') %}
+      <form method="post" action="/ui/variant/{{ v.id }}/approve"><button class="btn ok">{{ icon('check', 16) }} Duyệt và xếp lịch</button></form>
+    {% elif v.status == 'blocked' %}
+      <button class="btn" disabled title="Sửa nội dung trước khi duyệt">{{ icon('lock', 16) }} Đang bị chặn</button>
+    {% elif v.status == 'scheduled' %}
+      <span class="chip info">{{ icon('clock', 13) }} Lên lịch {{ fmt(v.scheduled_at, '%H:%M · %d/%m') }}</span>
+    {% endif %}
+  </div>
+  <details class="edit"><summary>{{ icon('edit', 14) }} Sửa nội dung — robot kiểm duyệt lại ngay</summary>
+    <form method="post" action="/ui/variant/{{ v.id }}/edit">
+      {% if v.channel == 'pinterest' %}<input type="text" name="title" value="{{ v.title or '' }}" style="margin-top:8px">{% endif %}
+      <textarea name="body">{{ v.body }}</textarea>
+      <button class="btn sm">Lưu và kiểm duyệt lại</button>
+    </form>
+  </details>
+  <details class="edit"><summary>{{ icon('x', 14) }} Từ chối kèm góp ý cho AI viết lại</summary>
+    <form method="post" action="/ui/variant/{{ v.id }}/reject" style="display:flex;gap:8px;margin-top:8px">
+      <input type="text" name="feedback" placeholder="Ví dụ: mở bài ngắn hơn, nhấn mạnh trẻ 1–3 tuổi">
+      <button class="btn sm">Từ chối</button>
+    </form>
+  </details>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="detail">
+  <section class="card src">
+    <div class="bd">
+      <span class="tag">Bài gốc trên website</span>
+      <img class="cover" src="{{ thumb(a) }}" alt="" style="margin-top:10px">
+      <h3>{{ a.title }}</h3>
+      <div class="small muted">{{ a.published_at[:10] }} · {{ (a.categories or [])|join(', ') }}</div>
+      <p class="small" style="color:var(--ink-2)">{{ a.excerpt }}</p>
+      {% set an = a.analysis or {} %}
+      {% if an %}
+      <span class="tag">AI phân tích</span>
+      <dl class="kv"><dt>Chủ đề</dt><dd>{{ an.topic }}</dd><dt>Đối tượng</dt><dd>{{ an.audience }}</dd>
+        <dt>Ý chính</dt><dd>{% for k in an.key_points %}<div>• {{ k }}</div>{% endfor %}</dd></dl>
+      {% endif %}
+      <div style="margin-top:14px"><span class="tag">Sổ XNQC</span></div>
+      {% for p in prods %}
+        <div class="prod"><b>{{ p.short_name }}</b><span class="chip {{ 'gold' if p.xnqc else 'err' }}" style="margin-top:4px">{{ p.xnqc or 'Chưa đọc được số XNQC' }}</span>
+          <ul>{% for c in p.claims %}<li>{{ c }}</li>{% endfor %}</ul></div>
+      {% else %}<div class="small muted" style="margin-top:6px">Bài không nhắc tới sản phẩm nào.</div>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="hd"><span class="badge-ch fb">f</span><h2>Bản Facebook</h2>{% if fb %}<span class="chip {{ STATUS_CLS[fb.status] }}">{{ STATUS_VI[fb.status] }}</span><span class="r small muted">{{ icon('spark', 13) }} {{ 'Claude' if fb.ai_provider == 'claude' else 'Bộ sinh dự phòng' }}</span>{% endif %}</div>
+    <div class="bd">
+    {% if fb %}
+      <div class="fbp">
+        <div class="h"><div class="av">D</div><div><div class="nm">Doppelherz</div>
+          <div class="mt">{{ 'Đã lên lịch · ' ~ fmt(fb.scheduled_at, '%d tháng %m lúc %H:%M') if fb.scheduled_at else 'Bản nháp' }} · {{ icon('globe', 12) }}</div></div>
+          <span style="margin-left:auto;color:#65676B">{{ icon('dots', 20) }}</span></div>
+        <div class="tx clip" id="fbtx">{{ fb.body }}</div>
+        <button class="more" type="button" onclick="document.getElementById('fbtx').classList.toggle('clip');this.textContent=this.textContent=='Xem thêm'?'Ẩn bớt':'Xem thêm'">Xem thêm</button>
+        <div class="lk"><img src="{{ thumb(a) }}" alt=""><div class="m"><div class="dm">{{ domain }}</div><div class="tt">{{ a.title }}</div><div class="ds">{{ a.excerpt }}</div></div></div>
+        <div class="rx"><span class="e"><i style="background:#1877F2;margin-left:0">👍</i><i style="background:#F33E58">❤</i> Xem trước</span><span>0 bình luận · 0 lượt chia sẻ</span></div>
+        <div class="ab"><span>{{ icon('like', 18) }} Thích</span><span>{{ icon('comment', 18) }} Bình luận</span><span>{{ icon('share', 18) }} Chia sẻ</span></div>
+      </div>
+      <h2 style="font-size:14.5px;margin:18px 0 4px">Kiểm duyệt tuân thủ</h2>
+      {{ issues(fb) }}
+      {{ actions(fb) }}
+    {% else %}<div class="empty">Không có bản Facebook (bài bị bỏ qua).</div>{% endif %}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="hd"><span class="badge-ch pin">P</span><h2>Ghim Pinterest</h2>{% if pin %}<span class="chip {{ STATUS_CLS[pin.status] }}">{{ STATUS_VI[pin.status] }}</span>{% endif %}</div>
+    <div class="bd">
+    {% if pin %}
+      <div class="pinp">
+        <div class="im">{% if pin.image_path %}<img src="{{ media(pin.image_path) }}" alt="{{ pin.alt_text or '' }}">{% endif %}<span class="save">Lưu</span><span class="ai">Ảnh ghép tự động · AI_MODIFIED</span></div>
+        <div class="t">{{ pin.title }}</div>
+        <div class="d">{{ pin.body }}</div>
+        <div class="bd"><span class="av">D</span><div><b>Doppelherz Việt Nam</b><div class="small muted">Bảng: {{ pin.board }}</div></div></div>
+      </div>
+      <dl class="kv" style="margin-top:14px"><dt>Alt-text</dt><dd class="small">{{ pin.alt_text }}</dd><dt>Link</dt><dd class="small" style="word-break:break-all">{{ pin.link }}</dd></dl>
+      <h2 style="font-size:14.5px;margin:16px 0 4px">Kiểm duyệt tuân thủ</h2>
+      {{ issues(pin) }}
+      {{ actions(pin) }}
+    {% else %}<div class="empty">Không có ghim Pinterest.</div>{% endif %}
+    </div>
+  </section>
+</div>
+
+<section class="card mt">
+  <div class="hd"><h2>Vết chạy thật của bài này</h2><span class="sub">Từng bước robot đã làm, thời gian và chi phí AI</span><a class="r btn sm" href="/luong">{{ icon('flow', 14) }} Xem toàn bộ luồng</a></div>
+  <div class="bd"><div class="tl">
+    {% for t in a.trace or [] %}
+    <div class="it {{ t.status }}"><div class="h"><b>{{ t.label }}</b>{% if t.ms is not none %}<span class="ms">{{ '{:,}'.format(t.ms).replace(',', '.') }} ms</span>{% endif %}<span class="ms">· {{ fmt(t.ts, '%H:%M:%S %d/%m') }}</span></div><div class="d">{{ t.detail }}</div></div>
+    {% else %}<div class="small muted">Bài này được xử lý trước khi bật ghi vết.</div>{% endfor %}
+  </div></div>
+</section>
+{% endblock %}

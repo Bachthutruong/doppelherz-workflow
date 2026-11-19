@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <div class="bd">
+    <div class="tabs">
+      {% for k, label, items in tabs %}<a href="/noi-dung?tab={{ k }}" class="{{ 'on' if k == tab }}">{{ label }}<span class="c">{{ items|length }}</span></a>{% endfor %}
+    </div>
+    <form method="get" action="/noi-dung" style="display:flex;gap:8px;margin-bottom:6px">
+      <input type="hidden" name="tab" value="{{ tab }}"><input type="search" name="q" value="{{ q }}" placeholder="Tìm theo tiêu đề bài viết…">
+      <button class="btn">{{ icon('search', 16) }} Tìm</button>
+    </form>
+    <table class="tbl">
+      <thead><tr><th style="width:44%">Bài trên website</th><th>Sản phẩm nhắc tới</th><th>Facebook</th><th>Pinterest</th><th></th></tr></thead>
+      <tbody>
+      {% for a in rows %}
+        <tr>
+          <td><a href="/bai/{{ a.id }}" style="display:flex;gap:12px;align-items:center">
+            <img class="thumb" src="{{ thumb(a) }}" alt="" loading="lazy">
+            <div><div style="font-weight:600;line-height:1.35">{{ a.title }}</div>
+            <div class="small muted">{{ a.published_at[:10] }} · {{ (a.categories or [])|reject('equalto', 'Kiến thức sức khỏe')|join(', ') or 'Kiến thức sức khỏe' }}</div></div></a></td>
+          <td>{% for p in a.products or [] %}<span class="chip gold" style="margin:2px 2px 0 0">{{ p }}</span>{% else %}<span class="muted">—</span>{% endfor %}</td>
+          {% if a.status in ('skipped', 'error') %}
+          <td colspan="2"><span class="chip">{{ 'Bỏ qua' if a.status == 'skipped' else 'Lỗi' }}: {{ (a.error or '')[:70] }}</span></td>
+          {% else %}
+          {% for ch in ('facebook', 'pinterest') %}{% set v = a.v.get(ch) %}
+          <td>{% if v %}<span class="chip {{ STATUS_CLS[v.status] }}">{{ STATUS_VI[v.status] }}</span>{% if v.scheduled_at and v.status in ('scheduled', 'published') %}<div class="small muted" style="margin-top:4px">{{ fmt(v.scheduled_at) }}</div>{% endif %}{% else %}—{% endif %}</td>
+          {% endfor %}
+          {% endif %}
+          <td><a class="btn sm" href="/bai/{{ a.id }}">Mở</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="empty">Không có bài nào trong mục này.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

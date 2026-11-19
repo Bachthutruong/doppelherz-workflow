@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block actions %}
+  <form method="post" action="/ui/metrics"><button class="btn">{{ icon('refresh', 16) }} Cập nhật số liệu</button></form>
+{% endblock %}
+{% block content %}
+{% if data.simulated %}<div class="card" style="padding:12px 16px;margin-bottom:16px;background:var(--warn-50);border-color:#F1D38A"><b>Chỉ số tương tác là số liệu mô phỏng</b> <span class="small">— bản demo chưa có token Facebook/Pinterest nên chạy chế độ thử. Khi đăng thật, robot lấy số liệu từ Graph API và Pinterest Analytics.</span></div>{% endif %}
+{% set st = data.variants_by_status %}
+<div class="grid g-4">
+  <div class="card kpi"><div class="ic">{{ icon('file') }}</div><div><div class="n">{{ data.articles_received }}</div><div class="l">bài web nhận trong 7 ngày</div></div></div>
+  <div class="card kpi"><div class="ic info">{{ icon('spark') }}</div><div><div class="n">{{ data.variants_created }}</div><div class="l">bản mạng xã hội đã tạo</div></div></div>
+  <div class="card kpi"><div class="ic ok">{{ icon('check') }}</div><div><div class="n">{{ data.approval_rate_pct }}%</div><div class="l">tỷ lệ được duyệt</div></div></div>
+  <div class="card kpi"><div class="ic gold">{{ icon('chart') }}</div><div><div class="n">${{ costs.cost }}</div><div class="l">chi phí AI · {{ costs.runs }} lượt</div></div></div>
+</div>
+
+<div class="grid g-main mt">
+  <section class="card">
+    <div class="hd"><h2>Nhận định tuần</h2><span class="r chip">{{ icon('spark', 12) }} {{ 'Claude viết' if s.ai_enabled else 'Theo quy tắc' }}</span></div>
+    <div class="bd">
+      <ul style="margin:0;padding-left:18px">{% for x in ins.summary %}<li style="margin-bottom:6px">{{ x }}</li>{% endfor %}</ul>
+      <div class="tag" style="margin:14px 0 6px">Đề xuất tuần tới</div>
+      <ul style="margin:0;padding-left:18px">{% for x in ins.actions %}<li style="margin-bottom:6px">{{ x }}</li>{% endfor %}</ul>
+      <details class="edit" style="margin-top:14px"><summary>{{ icon('send', 14) }} Bản tin gửi Telegram / Zalo</summary><pre style="white-space:pre-wrap;font:12.5px/1.5 var(--font);margin:8px 0 0">{{ text }}</pre></details>
+    </div>
+  </section>
+  <section class="card">
+    <div class="hd"><h2>Hiệu quả theo kênh</h2></div>
+    <div class="bd">
+      {% set mx = (data.per_channel.values()|map(attribute='impressions')|list + [1])|max %}
+      {% for ch, m in data.per_channel.items() %}
+      <div style="margin-bottom:14px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="badge-ch {{ 'fb' if ch == 'facebook' else 'pin' }}">{{ 'f' if ch == 'facebook' else 'P' }}</span><b>{{ 'Facebook' if ch == 'facebook' else 'Pinterest' }}</b><span class="small muted" style="margin-left:auto">{{ m.posts }} bài · CTR {{ '%.2f'|format(100 * m.clicks / m.impressions if m.impressions else 0) }}%</span></div>
+        <div class="bars">
+          <div class="bar"><span>Hiển thị</span><div class="tr"><div class="fl muted" style="width:{{ 100 * m.impressions / mx }}%"></div></div><span class="v">{{ '{:,}'.format(m.impressions).replace(',', '.') }}</span></div>
+          <div class="bar"><span>Tương tác</span><div class="tr"><div class="fl warn" style="width:{{ 100 * m.engagements / mx }}%;min-width:3px"></div></div><span class="v">{{ m.engagements }}</span></div>
+          <div class="bar"><span>Lượt nhấp về web</span><div class="tr"><div class="fl" style="width:{{ 100 * m.clicks / mx }}%;min-width:3px"></div></div><span class="v">{{ m.clicks }}</span></div>
+        </div>
+      </div>
+      {% else %}<div class="empty small">Chưa có bài nào được đăng.</div>{% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="grid g-2 mt">
+  <section class="card">
+    <div class="hd"><h2>Lỗi tuân thủ theo điều luật</h2><span class="sub">Tổng số lần phát hiện</span></div>
+    <div class="bd"><div class="bars">
+      {% for (code, sev), n in rules %}
+      <div class="bar"><span><span class="chip {{ SEV_CLS[sev] }}" style="font-size:11px;padding:1px 7px">{{ SEV_VI[sev] }}</span> {{ code }}</span><div class="tr"><div class="fl {{ 'ok' if sev == 'fixed' else ('warn' if sev == 'warn' else '') }}" style="width:{{ 100 * n / rmax }}%"></div></div><span class="v">{{ n }}</span></div>
+      {% else %}<div class="empty small">Không có lỗi nào.</div>{% endfor %}
+    </div>
+    <p class="small muted" style="margin:12px 0 0">R1 công dụng vượt XNQC · R2 ngụ ý chữa/phòng bệnh · R3 danh nghĩa nhân viên y tế · R4 từ tuyệt đối · R5 thiếu câu "không phải là thuốc" · XNQC số xác nhận quảng cáo.</p></div>
+  </section>
+  <section class="card">
+    <div class="hd"><h2>Bài hiệu quả nhất</h2><span class="sub">Theo lượt nhấp về website</span></div>
+    <div class="bd"><div class="list">
+      {% for t in data.top_posts_by_clicks %}
+      <div class="li"><span class="badge-ch {{ 'fb' if t.channel == 'facebook' else 'pin' }}">{{ 'f' if t.channel == 'facebook' else 'P' }}</span><div style="min-width:0"><div class="t small" style="font-size:13.5px">{{ t.title }}</div><div class="s">{{ '{:,}'.format(t.impressions).replace(',', '.') }} hiển thị</div></div><div class="r"><b>{{ t.clicks }}</b><span class="small muted">nhấp</span></div></div>
+      {% else %}<div class="empty small">Chưa có số liệu.</div>{% endfor %}
+    </div></div>
+  </section>
+</div>
+{% endblock %}

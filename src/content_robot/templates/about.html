@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block crumb %}Bài test vị trí Quản lý dự án AI Claude · Doppelherz Việt Nam{% endblock %}
+{% block heading %}Về bản demo{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="deco"></div>
+  <h2>Robot đồng bộ nội dung Website → Facebook, Pinterest</h2>
+  <p>Sản phẩm chạy thật cho Câu 2 của bài test: đăng một bài lên website thì hệ thống tự tạo và lên lịch nội dung tương ứng cho Facebook và Pinterest, có kiểm duyệt tuân thủ quảng cáo thực phẩm bảo vệ sức khỏe và báo cáo kết quả.</p>
+  <div class="meta"><span>{{ icon('user', 14) }} Ứng viên: Vu Duy Bach</span><span>{{ icon('spark', 14) }} {{ ai_label }}</span><span>{{ icon('send', 14) }} {{ 'Đăng thật' if live else 'Chạy thử — không đăng lên kênh thật' }}</span></div>
+</section>
+
+<div class="grid g-main mt">
+  <section class="card about"><div class="bd">
+    <h3>Xem nhanh trong 2 phút</h3>
+    <ol class="small" style="padding-left:18px;margin:0 0 14px;color:var(--ink-2)">
+      <li><a href="/" style="color:var(--brand-600);font-weight:600">Tổng quan</a> — hàng chờ duyệt, lịch sắp đăng, sức khỏe tuân thủ.</li>
+      <li><a href="/noi-dung?tab=blocked" style="color:var(--brand-600);font-weight:600">Bài bị chặn</a> — câu "bác sĩ khuyên dùng, chữa khỏi ốm vặt" bị khóa nút Duyệt.</li>
+      <li><a href="/lich" style="color:var(--brand-600);font-weight:600">Lịch đăng</a> — dạng tuần/tháng, khung giờ vàng, vạch giờ hiện tại.</li>
+      <li><a href="/luong" style="color:var(--brand-600);font-weight:600">Luồng xử lý</a> — 12 bước, vết chạy thật, n8n gọi robot.</li>
+      <li><a href="/bao-cao" style="color:var(--brand-600);font-weight:600">Báo cáo</a> — nhận định tuần, hiệu quả kênh, lỗi tuân thủ.</li>
+    </ol>
+    <h3>Thử tương tác</h3>
+    <p class="small">Mở một bài đang chờ duyệt → sửa nội dung, thêm câu như "sản phẩm giúp chữa khỏi bệnh" → bấm lưu: robot kiểm duyệt lại và chặn ngay. Sửa đúng công dụng trong sổ XNQC: robot tự thêm câu cảnh báo và số XNQC.</p>
+    <h3>Giới hạn của bản demo</h3>
+    <ul class="small" style="padding-left:18px;color:var(--ink-2)">
+      <li>Chưa có token Facebook, Pinterest của Doppelherz: robot dựng đúng payload API và ghi lại thay vì đăng. Chỉ số tương tác là mô phỏng và được gắn nhãn.</li>
+      <li>Sổ XNQC đọc từ mô tả sản phẩm trên website; trước khi chạy thật pháp chế cần đối chiếu với giấy XNQC gốc.</li>
+      <li>Đây không phải hệ thống chính thức của Doppelherz Việt Nam. Nội dung bài viết lấy công khai từ doppelherz.vn.</li>
+    </ul>
+    <h3>Công nghệ</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">{% for t in ['Python 3 · FastAPI', 'Claude API (structured outputs, fallback)', 'n8n', 'WordPress REST API', 'WooCommerce Store API', 'Meta Graph API v27.0', 'Pinterest API v5', 'SQLite', 'Pillow', 'pytest · 20 bài kiểm thử', 'nginx · systemd'] %}<span class="chip">{{ t }}</span>{% endfor %}</div>
+  </div></section>
+
+  <section class="card"><div class="hd"><h2>Tài liệu và mã nguồn</h2></div><div class="bd dl">
+    {% for f in files %}
+    <a href="/tai-xuong/{{ f }}">{{ icon('download', 20) }}<div><b>{{ f }}</b><span>{{ {'pdf': 'Bài làm đầy đủ (PDF)', 'docx': 'Bài làm (Word)', 'zip': 'Mã nguồn robot + n8n + prompt + test', 'json': 'Luồng n8n — nhập trực tiếp vào n8n', 'php': 'Plugin webhook cho WordPress'}.get(f.rsplit('.', 1)[-1], 'Tệp') }}</span></div></a>
+    {% else %}<div class="small muted">Chưa có tệp tải xuống.</div>{% endfor %}
+    <a href="{{ s.repo_url }}" target="_blank" rel="noopener">{{ icon('external', 20) }}<div><b>Mã nguồn trên GitHub</b><span>{{ s.repo_url.replace('https://', '') }}</span></div></a>
+    <a href="/api/docs">{{ icon('server', 20) }}<div><b>API robot</b><span>Tài liệu OpenAPI các endpoint cho n8n</span></div></a>
+  </div></section>
+</div>
+{% endblock %}

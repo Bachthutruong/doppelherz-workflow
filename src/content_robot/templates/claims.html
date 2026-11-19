@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block crumb %}Hệ thống · dựng tự động từ WooCommerce API của doppelherz.vn{% endblock %}
+{% block heading %}Sổ XNQC — công dụng được phép{% endblock %}
+{% block actions %}<input type="search" placeholder="Tìm sản phẩm, số XNQC…" oninput="filterCards(this.value)" style="width:280px">{% endblock %}
+{% block content %}
+{% set nx = prods|selectattr('xnqc')|list|length %}
+<div class="grid g-3">
+  <div class="card kpi"><div class="ic">{{ icon('package') }}</div><div><div class="n">{{ prods|length }}</div><div class="l">sản phẩm đang bán trên website</div></div></div>
+  <div class="card kpi"><div class="ic ok">{{ icon('shield') }}</div><div><div class="n">{{ nx }}</div><div class="l">đọc được số XNQC và công dụng</div></div></div>
+  <div class="card kpi"><div class="ic warn">{{ icon('alert') }}</div><div><div class="n">{{ prods|length - nx }}</div><div class="l">cần pháp chế xác nhận — robot chặn quảng cáo</div></div></div>
+</div>
+<p class="small muted" style="margin:14px 2px">Claude chỉ được viết công dụng có trong sổ này. Khi bài nhắc sản phẩm, robot tự thêm câu "Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh." và số XNQC. Trước khi chạy thật, pháp chế đối chiếu sổ với giấy XNQC gốc.</p>
+<div class="pgrid">
+  {% for p in prods %}
+  <div class="pc" data-q="{{ (p.short_name ~ ' ' ~ (p.xnqc or '') ~ ' ' ~ p.claims|join(' '))|lower }}">
+    <div class="top2"><img src="{{ p.image_url or '/static/placeholder.svg' }}" alt="" loading="lazy"><div><b>{{ p.short_name }}</b>
+      <div class="x">{% if p.price_vnd %}{{ '{:,}'.format(p.price_vnd).replace(',', '.') }} đ{% endif %}</div></div></div>
+    <div>{% if p.xnqc %}<span class="chip gold">{{ icon('shield', 12) }} XNQC {{ p.xnqc }}</span>{% else %}<span class="chip err">{{ icon('alert', 12) }} Chưa đọc được số XNQC chuẩn</span>{% endif %}</div>
+    <ul>{% for c in p.claims %}<li>{{ c }}</li>{% endfor %}</ul>
+    <a class="small" style="color:var(--brand-600);font-weight:600;margin-top:auto" href="{{ p.url }}" target="_blank" rel="noopener">Trang sản phẩm ↗</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
